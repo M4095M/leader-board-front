@@ -53,82 +53,19 @@ function NavBar() {
             className={`hover:text-pink-500 transition-all ${activeLink === "welcome" ? "text-pink-500" : ""}`}
             onClick={() => setActiveLink("welcome")}
           >
-            Welcome
-          </Link>
-          <Link
-            to="/Challenges"
-            className={`hover:text-pink-500 transition-all ${activeLink === "challenges" ? "text-pink-500" : ""}`}
-            onClick={() => setActiveLink("challenges")}
-          >
-            Challenges
-          </Link>
-          <Link
-            to="/Leaderboard"
-            className={`hover:text-pink-500 transition-all ${activeLink === "leaderboard" ? "text-pink-500" : ""}`}
-            onClick={() => setActiveLink("leaderboard")}
-          >
             Leaderboard
           </Link>
-          <a
-            href="https://discord.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-pink-500 transition-all"
-          >
-            Discord
-          </a>
+     
+
         </div>
       </div>
 
       {/* Countdown Timer */}
       <div className="mt-4 md:mt-0 md:flex md:justify-center">
-        <Countdown date={new Date("2025-12-31T23:59:59")} renderer={renderer} />
+        <Countdown date={new Date("2025-05-10T13:00:00")} renderer={renderer} />
       </div>
 
-      {/* Mobile Menu Dropdown */}
-      {menuOpen && (
-        <div className="absolute top-16 left-[50%] w-[30%] bg-white text-gray-800 p-4 space-y-4 shadow-md z-10">
-          <Link
-            to="/"
-            className="block hover:text-pink-500 transition-all"
-            onClick={() => {
-              setActiveLink("welcome");
-              setMenuOpen(false);
-            }}
-          >
-            Welcome
-          </Link>
-          <Link
-            to="/Challenges"
-            className="block hover:text-pink-500 transition-all"
-            onClick={() => {
-              setActiveLink("challenges");
-              setMenuOpen(false);
-            }}
-          >
-            Challenges
-          </Link>
-          <Link
-            to="/Leaderboard"
-            className="block hover:text-pink-500 transition-all"
-            onClick={() => {
-              setActiveLink("leaderboard");
-              setMenuOpen(false);
-            }}
-          >
-            Leaderboard
-          </Link>
-          <a
-            href="https://discord.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block hover:text-pink-500 transition-all"
-            onClick={() => setMenuOpen(false)}
-          >
-            Discord
-          </a>
-        </div>
-      )}
+
     </div>
   );
 }

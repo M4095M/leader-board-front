@@ -6,7 +6,7 @@ import NotFound from "./pages/NotFound";
 
 function App() {
   return (
-<div class="relative w-full h-screen bg-gradient-to-b from-black via-pink-950 to-black overflow-hidden">
+<div class="relative w-full min-h-screen bg-gradient-to-b from-black via-pink-950 to-black overflow-hidden">
 
   <div class="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-pink-500 opacity-20 blur-3xl"></div>
   <div class="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-pink-500 opacity-25 blur-3xl"></div>
@@ -69,7 +69,7 @@ function App() {
   <div class="relative z-10">
     <Router>
       <Routes>
-        <Route path="/" element={<Welcome />} />
+        <Route path="/" element={<Leaderboard c="0" />} />
         <Route path="/Challenges" element={<Challenges />} />
         <Route path="/Leaderboard" element={<Leaderboard c="0" />} />
         <Route path="/Leaderboard-1" element={<Leaderboard c="1" />} />
