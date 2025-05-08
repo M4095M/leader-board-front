@@ -1,69 +1,67 @@
-import React, { useEffect, useState, useMemo } from "react"; // Added useMemo
+import React, { useEffect, useState, useMemo } from "react";
 import { io } from "socket.io-client";
 import NavBar from "../../Navbar";
 
 // --- ORGANIZER CONFIGURATION FOR SECRET CHALLENGE ---
-const ACTIVATE_SECRET_CHALLENGE_5 = false; // Set to true to include Challenge 5 in averages
+const ACTIVATE_SECRET_CHALLENGE_5 = false; // Controls visibility for specific challenge views, but not averaging
 // ----------------------------------------------------
 
 // --- NEW Centralized Challenge Data Structure ---
 const challengesConfig = {
   "1": {
     id: "1",
-    url: "https://leaderboardadc-copy3.onrender.com/", // Replace with actual URLs if different per challenge
-    competitionName: "predict-away-wins", // Example: Replace with actual Kaggle competition slug or your API endpoint name
-    weight: 0.25, // Example weight
-    isActive: true, // Always active
-    displayName: "digit-recognizer",
+    url: "http://0.0.0.0:5001/",
+    competitionName: "adc4-yassir",
+    weight: 0.3,
+    isActive: true,
+    displayName: "adc4-yassir",
   },
   "2": {
     id: "2",
-    url: "https://leaderboardadc-copy3.onrender.com/",
-    competitionName: "digit-recognizerl",
-    weight: 0.25,
+    url: "http://0.0.0.0:5001/",
+    competitionName: "ADC-4-0-BNP-Paribas-El-Djazair",
+    weight: 0.2,
     isActive: true,
-    displayName: "Groundwater Level",
+    displayName: "ADC-4-0-BNP-Paribas-El-Djazair",
   },
   "3": {
     id: "3",
-    url: "https://leaderboardadc-copy3.onrender.com/",
-    competitionName: "digit-recognizer",
-    weight: 0.30,
+    url: "http://0.0.0.0:5001/",
+    competitionName: "adc-4-0-social-o-scope",
+    weight: 0.2,
     isActive: true,
-    displayName: "Image Classification",
+    displayName: "adc-4-0-social-o-scope",
   },
   "4": {
     id: "4",
-    url: "https://leaderboardadc-copy3.onrender.com/",
-    competitionName: "digit-recognizer",
-    weight: 0.20,
+    url: "http://0.0.0.0:5001/",
+    competitionName: "adc-4-0-gt",
+    weight: 0.2,
     isActive: true,
-    displayName: "Sentiment Analysis",
+    displayName: "adc-4-0-gt",
   },
-  "5": { // The 5th (secret) challenge
+  "5": {
     id: "5",
-    url: "https://leaderboardadc-copy3.onrender.com/",
-    competitionName: "digit-recognizer", // Example
-    weight: 0.40, // Can have a different weight
-    isActive: ACTIVATE_SECRET_CHALLENGE_5, // Controlled by the flag above
-    displayName: "SECRET: Anomaly Detection",
+    url: "http://0.0.0.0:5001/",
+    competitionName: "adc-4-0-biopharm",
+    weight: 0.1,
+    isActive: ACTIVATE_SECRET_CHALLENGE_5, // Still used for specific challenge views (c === "5")
+    displayName: "adc-4-0-biopharm",
   }
 };
 // --- End Centralized Challenge Data Structure ---
 
-
-function Leaderboard({ c }) { // 'c' is the challenge ID string: "0" for general, "1", "2", etc. for specific
+function Leaderboard({ c }) {
   const [leaderboard, setLeaderboard] = useState([]);
   const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleString());
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Derived variables using useMemo for efficiency
   const currentChallengeConfig = useMemo(() => {
-    if (c === "0") { // General leaderboard
+    if (c === "0") {
       return {
         id: "0",
-        url: Object.values(challengesConfig).find(ch => ch.url)?.url || "https://leaderboardadc-copy3.onrender.com/", // Fallback or determine primary URL
+        url: Object.values(challengesConfig).find(ch => ch.url)?.url || "http://0.0.0.0:5001/",
         competitionName: "General Weighted Average",
         displayName: "Overall Leaderboard"
       };
@@ -71,12 +69,12 @@ function Leaderboard({ c }) { // 'c' is the challenge ID string: "0" for general
     return challengesConfig[c];
   }, [c]);
 
-  const backendUrl = currentChallengeConfig?.url; // Base URL for socket connection, adjust if needed
+  const backendUrl = currentChallengeConfig?.url;
 
   useEffect(() => {
     setLoading(true);
     setError(null);
-    setLeaderboard([]); // Clear previous data
+    setLeaderboard([]);
 
     if (!currentChallengeConfig) {
       setError(`Invalid challenge ID: ${c}`);
@@ -84,30 +82,39 @@ function Leaderboard({ c }) { // 'c' is the challenge ID string: "0" for general
       return;
     }
     if (c !== "0" && !backendUrl) {
-        setError(`No backend URL configured for challenge ${c}`);
-        setLoading(false);
-        return;
+      setError(`No backend URL configured for challenge ${c}`);
+      setLoading(false);
+      return;
     }
-
 
     async function fetchLeaderboard() {
       // --- Logic for General Weighted Average Leaderboard (c === "0") ---
       if (c === "0") {
         try {
-          const activeChallenges = Object.values(challengesConfig).filter(ch => ch.isActive);
-          if (activeChallenges.length === 0) {
-            setError("No active challenges configured for averaging.");
+          // Use all challenges for averaging, regardless of isActive
+          const allChallenges = Object.values(challengesConfig);
+          if (allChallenges.length === 0) {
+            setError("No challenges configured for averaging.");
             setLeaderboard([]);
             setLoading(false);
             return;
           }
 
-          const fetchPromises = activeChallenges.map(challenge =>
+          // Normalize weights to ensure they sum to 1.0
+          const totalWeight = allChallenges.reduce((sum, ch) => sum + ch.weight, 0);
+          if (totalWeight === 0) {
+            setError("Total weight of challenges is zero.");
+            setLeaderboard([]);
+            setLoading(false);
+            return;
+          }
+
+          const fetchPromises = allChallenges.map(challenge =>
             fetch(`${challenge.url}/api/leaderboard/${challenge.competitionName}`)
               .then(res => {
                 if (!res.ok) {
                   console.error(`Failed to fetch ${challenge.competitionName}: ${res.status}`);
-                  return { challengeId: challenge.id, weight: challenge.weight, leaderboardData: { leaderboard: [] } }; // Include ID and weight
+                  return { challengeId: challenge.id, weight: challenge.weight, leaderboardData: { leaderboard: [] } };
                 }
                 return res.json().then(data => ({ challengeId: challenge.id, weight: challenge.weight, leaderboardData: data }));
               })
@@ -120,11 +127,25 @@ function Leaderboard({ c }) { // 'c' is the challenge ID string: "0" for general
           const responses = await Promise.all(fetchPromises);
 
           const teamScores = {};
-          // teamScores structure:
-          // { teamName: { weightedScoreSum: 0, totalWeightApplicable: 0, latestSubmission: "1970-01-01", submissions: {} } }
+          const allTeams = new Set();
+          responses.forEach(response => {
+            const { leaderboardData } = response;
+            (leaderboardData.leaderboard || []).forEach(({ team }) => {
+              if (typeof team === 'string') {
+                allTeams.add(team);
+              }
+            });
+          });
+
+          allTeams.forEach(team => {
+            teamScores[team] = { weightedScoreSum: 0, totalWeightApplicable: 0, latestSubmission: "1970-01-01" };
+          });
 
           responses.forEach(response => {
             const { challengeId, weight, leaderboardData } = response;
+            const normalizedWeight = weight / totalWeight; // Normalize weight
+            const challengeTeams = new Set((leaderboardData.leaderboard || []).map(entry => entry.team));
+
             (leaderboardData.leaderboard || []).forEach(({ team, score, submission_date }) => {
               const numericScore = parseFloat(score);
               if (typeof team !== 'string' || isNaN(numericScore)) {
@@ -132,12 +153,8 @@ function Leaderboard({ c }) { // 'c' is the challenge ID string: "0" for general
                 return;
               }
 
-              if (!teamScores[team]) {
-                teamScores[team] = { weightedScoreSum: 0, totalWeightApplicable: 0, latestSubmission: "1970-01-01" };
-              }
-
-              teamScores[team].weightedScoreSum += numericScore * weight;
-              teamScores[team].totalWeightApplicable += weight;
+              teamScores[team].weightedScoreSum += numericScore * normalizedWeight;
+              teamScores[team].totalWeightApplicable += normalizedWeight;
 
               try {
                 if (new Date(submission_date) > new Date(teamScores[team].latestSubmission)) {
@@ -147,15 +164,21 @@ function Leaderboard({ c }) { // 'c' is the challenge ID string: "0" for general
                 console.warn(`Invalid submission_date for team ${team} in challenge ${challengeId}: ${submission_date}`);
               }
             });
+
+            allTeams.forEach(team => {
+              if (!challengeTeams.has(team)) {
+                teamScores[team].weightedScoreSum += 0 * normalizedWeight; // Score of 0
+                teamScores[team].totalWeightApplicable += normalizedWeight;
+              }
+            });
           });
 
           if (Object.keys(teamScores).length === 0) {
-             setError("No data available from any active challenge for averaging.");
-             setLeaderboard([]);
-             setLoading(false);
-             return;
+            setError("No teams found across any challenge.");
+            setLeaderboard([]);
+            setLoading(false);
+            return;
           }
-
 
           const weightedLeaderboard = Object.entries(teamScores)
             .map(([team, { weightedScoreSum, totalWeightApplicable, latestSubmission }]) => {
@@ -164,10 +187,10 @@ function Leaderboard({ c }) { // 'c' is the challenge ID string: "0" for general
                 rank: "-",
                 team,
                 submission_date: latestSubmission !== "1970-01-01" ? new Date(latestSubmission).toLocaleString() : "N/A",
-                score: finalScore.toFixed(4), // Weighted average score
+                score: finalScore.toFixed(4),
               };
             })
-            .filter(entry => entry.score > 0 || entry.totalWeightApplicable > 0); // Optionally filter out teams with no scores if desired
+            .filter(entry => entry.score > 0 || entry.totalWeightApplicable > 0);
 
           weightedLeaderboard.sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
 
@@ -190,10 +213,17 @@ function Leaderboard({ c }) { // 'c' is the challenge ID string: "0" for general
         } finally {
           setLoading(false);
         }
-        return; // Exit useEffect if c === "0"
+        return;
       }
 
       // --- Logic for specific challenges (c !== "0") ---
+      // Respect isActive for specific challenge views
+      if (c !== "0" && !currentChallengeConfig.isActive) {
+        setError(`Challenge ${currentChallengeConfig.displayName} is not active.`);
+        setLoading(false);
+        return;
+      }
+
       try {
         console.log(`Fetching: ${currentChallengeConfig.url}/api/leaderboard/${currentChallengeConfig.competitionName}`);
         const response = await fetch(`${currentChallengeConfig.url}/api/leaderboard/${currentChallengeConfig.competitionName}`);
@@ -224,13 +254,9 @@ function Leaderboard({ c }) { // 'c' is the challenge ID string: "0" for general
 
     fetchLeaderboard();
 
-    // --- Socket.IO Logic ---
-    // Socket should connect to a relevant backend, potentially the primary one or specific one if c !== "0"
-    // For simplicity, using the 'backendUrl' derived for the current view.
-    // If general view (c==="0"), this might be a main URL.
     if (!backendUrl) {
-        console.warn("No backend URL for socket connection.");
-        return;
+      console.warn("No backend URL for socket connection.");
+      return;
     }
 
     console.log(`Setting up Socket.IO connection to ${backendUrl}`);
@@ -244,12 +270,10 @@ function Leaderboard({ c }) { // 'c' is the challenge ID string: "0" for general
 
     socket.on("update_leaderboard", (data) => {
       console.log("Received real-time update:", data);
-      // This update logic might need to be smarter for c === "0".
-      // If backend sends individual challenge update, client would need to re-fetch and re-calculate average.
-      // For now, assuming the update is for the currently viewed leaderboard type.
-      // If c === "0" and the backend sends a fully recalculated *weighted* leaderboard, this is fine.
-      // If c !== "0" and backend sends an update for that specific challenge, this is fine.
-      if (data && Array.isArray(data.leaderboard)) {
+      if (c === "0" && data.competitionName) {
+        // For general leaderboard, refetch and recalculate average on any challenge update
+        fetchLeaderboard();
+      } else if (data && Array.isArray(data.leaderboard)) {
         const formattedUpdate = data.leaderboard.map((entry) => ({
           ...entry,
           rank: entry.rank !== undefined ? entry.rank : '-',
@@ -267,18 +291,13 @@ function Leaderboard({ c }) { // 'c' is the challenge ID string: "0" for general
       console.log("Disconnecting socket");
       socket.disconnect();
     };
-    // --- End Socket.IO Logic ---
+  }, [c, currentChallengeConfig, backendUrl]);
 
-  }, [c, currentChallengeConfig, backendUrl]); // Added currentChallengeConfig and backendUrl
-
-  // --- JSX Structure ---
   return (
     <div className="w-full min-h-screen bg-custom-dark-blue text-custom-light-gray p-0 m-0 bg-cover bg-center bg-fixed bg-no-repeat">
       <NavBar />
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16"> {/* Added more padding top/bottom */}
-
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         <div className="text-center mb-10">
-
           {error && (
             <p className="mt-4 text-red-400 bg-red-900/30 px-4 py-2 rounded-md border border-red-700 inline-block max-w-xl text-left">
               <span className="font-bold">Error:</span> {error}
@@ -295,9 +314,9 @@ function Leaderboard({ c }) { // 'c' is the challenge ID string: "0" for general
           </div>
         ) : (
           <div className="bg-custom-light-blue rounded-xl shadow-2xl shadow-black/30 overflow-hidden">
-            <div className="overflow-x-auto max-h-[75vh] overflow-y-auto"> {/* Adjusted max-h */}
+            <div className="overflow-x-auto max-h-[75vh] overflow-y-auto">
               <table className="w-full text-sm text-left text-custom-gray">
-                <thead className="text-xs text-custom-light-gray uppercase bg-gray-700/50 sticky top-0 z-10"> {/* Sticky header */}
+                <thead className="text-xs text-custom-light-gray uppercase bg-gray-700/50 sticky top-0 z-10">
                   <tr>
                     <th scope="col" className="px-6 py-4 text-center w-16 sm:w-20">Rank</th>
                     <th scope="col" className="px-6 py-4">Team</th>
@@ -311,7 +330,7 @@ function Leaderboard({ c }) { // 'c' is the challenge ID string: "0" for general
                   {leaderboard && leaderboard.length > 0 ? (
                     leaderboard.map((entry, index) => (
                       <tr
-                        key={entry.team + '-' + index + '-' + entry.rank} // More unique key
+                        key={entry.team + '-' + index + '-' + entry.rank}
                         className="border-b border-gray-700 hover:bg-gray-600/30 transition-colors duration-150 ease-in-out"
                       >
                         <td className={`px-6 py-3 text-xl sm:text-2xl text-center font-bold ${Number(entry.rank) <= 3 ? "text-yellow-400" : (Number(entry.rank) <=10 ? "text-slate-300" : "text-white")}`}>
