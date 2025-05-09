@@ -12,7 +12,7 @@ const challengesConfig = {
     id: "1",
     url: "http://0.0.0.0:5001/",
     competitionName: "adc4-yassir",
-    weight: 0.3,
+    weight: 0.15,
     isActive: true,
     displayName: "adc4-yassir",
   },
@@ -20,7 +20,7 @@ const challengesConfig = {
     id: "2",
     url: "http://0.0.0.0:5001/",
     competitionName: "ADC-4-0-BNP-Paribas-El-Djazair",
-    weight: 0.2,
+    weight: 0.3,
     isActive: true,
     displayName: "ADC-4-0-BNP-Paribas-El-Djazair",
   },
@@ -42,9 +42,9 @@ const challengesConfig = {
   },
   "5": {
     id: "5",
-    url: "http://0.0.0.0:5001/",
+    url: "  ",
     competitionName: "adc-4-0-biopharm",
-    weight: 0.1,
+    weight: 0.15,
     isActive: ACTIVATE_SECRET_CHALLENGE_5, // Still used for specific challenge views (c === "5")
     displayName: "adc-4-0-biopharm",
   }
@@ -147,10 +147,15 @@ function Leaderboard({ c }) {
             const challengeTeams = new Set((leaderboardData.leaderboard || []).map(entry => entry.team));
 
             (leaderboardData.leaderboard || []).forEach(({ team, score, submission_date }) => {
-              const numericScore = parseFloat(score);
+              let numericScore = parseFloat(score);
               if (typeof team !== 'string' || isNaN(numericScore)) {
                 console.warn('Skipping invalid entry during averaging:', { team, score, submission_date });
                 return;
+              }
+
+              // Normalize RMSE for challenge 2
+              if (challengeId === "2") {
+                numericScore = 1 / (1 + numericScore);
               }
 
               teamScores[team].weightedScoreSum += numericScore * normalizedWeight;
