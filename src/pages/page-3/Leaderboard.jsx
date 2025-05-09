@@ -10,7 +10,7 @@ const ACTIVATE_SECRET_CHALLENGE_5 = false; // Controls visibility for specific c
 const challengesConfig = {
   "1": {
     id: "1",
-    url: "https://leader-board-back.onrender.com/",
+    url: "http://0.0.0.0:5001/",
     competitionName: "adc4-yassir",
     weight: 0.15,
     isActive: true,
@@ -18,7 +18,7 @@ const challengesConfig = {
   },
   "2": {
     id: "2",
-    url: "https://leader-board-back.onrender.com/",
+    url: "http://0.0.0.0:5001/",
     competitionName: "ADC-4-0-BNP-Paribas-El-Djazair",
     weight: 0.3,
     isActive: true,
@@ -26,7 +26,7 @@ const challengesConfig = {
   },
   "3": {
     id: "3",
-    url: "https://leader-board-back.onrender.com/",
+    url: "http://0.0.0.0:5001/",
     competitionName: "adc-4-0-social-o-scope",
     weight: 0.2,
     isActive: true,
@@ -34,7 +34,7 @@ const challengesConfig = {
   },
   "4": {
     id: "4",
-    url: "https://leader-board-back.onrender.com/",
+    url: "http://0.0.0.0:5001/",
     competitionName: "adc-4-0-gt",
     weight: 0.2,
     isActive: true,
@@ -61,7 +61,7 @@ function Leaderboard({ c }) {
     if (c === "0") {
       return {
         id: "0",
-        url: Object.values(challengesConfig).find(ch => ch.url)?.url || "https://leader-board-back.onrender.com/",
+        url: Object.values(challengesConfig).find(ch => ch.url)?.url || "http://0.0.0.0:5001/",
         competitionName: "General Weighted Average",
         displayName: "Overall Leaderboard"
       };
